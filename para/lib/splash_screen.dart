@@ -69,49 +69,57 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: Image.asset(
-                  'assets/images/logo1.png',
-                  height: 300,
-                ),
-              ),
-              const SizedBox(height: 5),
-              AnimatedBuilder(
-                animation: _gradientAnimation,
-                builder: (context, child) {
-                  return ShaderMask(
-                    shaderCallback: (bounds) {
-                      return LinearGradient(
-                        begin: Alignment(_gradientAnimation.value, 0),
-                        end: Alignment(-_gradientAnimation.value, 0),
-                        colors: const [
-                          Color.fromARGB(255, 189, 224, 252),
-                          Color.fromARGB(255, 169, 243, 171),
-                          Color.fromARGB(255, 255, 195, 195),
-                        ],
-                      ).createShader(bounds);
-                    },
-                    child: const Text(
-                      'Sparsh',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 52,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/bg13.jpg',
+            fit: BoxFit.cover,
           ),
-        ),
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Image.asset(
+                      'assets/images/logo1.png',
+                      height: 300,
+                    ),
+                  ),
+                  AnimatedBuilder(
+                    animation: _gradientAnimation,
+                    builder: (context, child) {
+                      return ShaderMask(
+                        shaderCallback: (bounds) {
+                          return LinearGradient(
+                            begin: Alignment(_gradientAnimation.value, 0),
+                            end: Alignment(-_gradientAnimation.value, 0),
+                            colors: const [
+                              Color.fromARGB(255, 189, 224, 252),
+                              Color.fromARGB(255, 169, 243, 171),
+                              Color.fromARGB(255, 255, 195, 195),
+                            ],
+                          ).createShader(bounds);
+                        },
+                        child: const Text(
+                          'Sparsh',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 52,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

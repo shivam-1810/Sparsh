@@ -43,105 +43,116 @@ class MessagesPage extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.grey[900],
+        backgroundColor: const Color.fromARGB(255, 8, 48, 109),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: messages.length,
-        itemBuilder: (context, index) {
-          final message = messages[index];
-          return ExpandableNotifier(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                color: Colors.grey[850],
-                child: Column(
-                  children: <Widget>[
-                    ScrollOnExpand(
-                      scrollOnExpand: true,
-                      scrollOnCollapse: false,
-                      child: ExpandablePanel(
-                        theme: const ExpandableThemeData(
-                          headerAlignment:
-                              ExpandablePanelHeaderAlignment.center,
-                          tapBodyToExpand: true,
-                          tapBodyToCollapse: true,
-                          hasIcon: true,
-                          iconColor: Colors.white,
-                        ),
-                        header: Padding(
-                          padding: const EdgeInsets.all(13),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                message['image']!,
-                                width: 40,
-                                height: 40,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  message['text']!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        collapsed: Container(),
-                        expanded: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 10),
-                              ElevatedButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(Icons.volume_up),
-                                label: const Text('Speak'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 45),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  // Code to send the message
-                                },
-                                icon: const Icon(Icons.send),
-                                label: const Text('Send'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 45),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                            ],
-                          ),
-                        ),
-                      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/bg6.jpg',
+            fit: BoxFit.cover,
+          ),
+          ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              final message = messages[index];
+              return ExpandableNotifier(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Card(
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    color: const Color.fromARGB(255, 30, 56, 136),
+                    child: Column(
+                      children: <Widget>[
+                        ScrollOnExpand(
+                          scrollOnExpand: true,
+                          scrollOnCollapse: false,
+                          child: ExpandablePanel(
+                            theme: const ExpandableThemeData(
+                              headerAlignment:
+                                  ExpandablePanelHeaderAlignment.center,
+                              tapBodyToExpand: true,
+                              tapBodyToCollapse: true,
+                              hasIcon: true,
+                              iconColor: Colors.white,
+                            ),
+                            header: Padding(
+                              padding: const EdgeInsets.all(13),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    message['image']!,
+                                    width: 40,
+                                    height: 40,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      message['text']!,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            collapsed: Container(),
+                            expanded: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 10),
+                                  ElevatedButton.icon(
+                                    onPressed: () {},
+                                    icon: const Icon(Icons.volume_up),
+                                    label: const Text('Speak'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      minimumSize:
+                                          const Size(double.infinity, 45),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      // Code to send the message
+                                    },
+                                    icon: const Icon(Icons.send),
+                                    label: const Text('Send'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      minimumSize:
+                                          const Size(double.infinity, 45),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ],
       ),
     );
   }

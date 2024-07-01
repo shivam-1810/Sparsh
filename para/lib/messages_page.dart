@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:expandable/expandable.dart';
+import 'package:background_sms/background_sms.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class MessagesPage extends StatelessWidget {
   final String category;
+  final FlutterTts flutterTts = FlutterTts();
+
   final Map<String, List<Map<String, String>>> categoryMessages = {
     'Help': [
       {'text': 'I need help!', 'image': 'assets/images/needhelp.png'},
@@ -109,7 +113,9 @@ class MessagesPage extends StatelessWidget {
                                 children: [
                                   const SizedBox(height: 10),
                                   ElevatedButton.icon(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      speakMessage(message['text']!);
+                                    },
                                     icon: const Icon(Icons.volume_up),
                                     label: const Text('Speak'),
                                     style: ElevatedButton.styleFrom(
@@ -125,7 +131,7 @@ class MessagesPage extends StatelessWidget {
                                   const SizedBox(height: 10),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      // Code to send the message
+                                      sendSMS(context, message['text']!);
                                     },
                                     icon: const Icon(Icons.send),
                                     label: const Text('Send'),
@@ -153,6 +159,37 @@ class MessagesPage extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  void speakMessage(String message) async {
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.speak(message);
+  }
+
+  void sendSMS(BuildContext context, String message) async {
+    final SmsStatus result = await BackgroundSms.sendMessage(
+      phoneNumber: '7033303100', // Replace with your phone number
+      message: message,
+      simSlot: 2,
+    );
+    String feedbackMessage;
+    if (result == SmsStatus.sent) {
+      feedbackMessage = 'SMS sent successfully';
+    } else {
+      feedbackMessage = 'Failed to send SMS';
+    }
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          feedbackMessage,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+        duration: const Duration(seconds: 2),
       ),
     );
   }

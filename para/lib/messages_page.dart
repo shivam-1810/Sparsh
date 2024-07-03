@@ -1,7 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:expandable/expandable.dart';
 import 'package:background_sms/background_sms.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MessagesPage extends StatelessWidget {
   final String category;
@@ -170,27 +174,70 @@ class MessagesPage extends StatelessWidget {
   }
 
   void sendSMS(BuildContext context, String message) async {
-    final SmsStatus result = await BackgroundSms.sendMessage(
-      phoneNumber: '7033303100', // Replace with your phone number
-      message: message,
-      simSlot: 2,
-    );
-    String feedbackMessage;
-    if (result == SmsStatus.sent) {
-      feedbackMessage = 'SMS sent successfully';
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? phoneNumber = prefs.getString('phoneNumber');
+
+    if (phoneNumber == null) {
+      // Ask for phone number if not set
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          TextEditingController phoneController = TextEditingController();
+          return AlertDialog(
+            title: const Text('Enter Phone Number'),
+            content: TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              decoration:
+                  const InputDecoration(hintText: 'Reciepient Phone Number'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  String inputNumber = phoneController.text;
+                  if (inputNumber.isNotEmpty) {
+                    await prefs.setString('phoneNumber', inputNumber);
+                    sendSMS(context, message);
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     } else {
-      feedbackMessage = 'Failed to send SMS';
+      // Request SMS permissions
+      if (await Permission.sms.request().isGranted) {
+        final SmsStatus result = await BackgroundSms.sendMessage(
+          phoneNumber: phoneNumber,
+          message: message,
+          simSlot: 2,
+        );
+        String feedbackMessage;
+        if (result == SmsStatus.sent) {
+          feedbackMessage = 'SMS sent successfully';
+        } else {
+          feedbackMessage = 'Failed to send SMS';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              feedbackMessage,
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.black,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          feedbackMessage,
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.black,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 }

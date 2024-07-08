@@ -6,10 +6,22 @@ import 'package:background_sms/background_sms.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:translator/translator.dart';
 
-class MessagesPage extends StatelessWidget {
+class MessagesPage extends StatefulWidget {
   final String category;
+
+  const MessagesPage({super.key, required this.category});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _MessagesPageState createState() => _MessagesPageState();
+}
+
+class _MessagesPageState extends State<MessagesPage> {
   final FlutterTts flutterTts = FlutterTts();
+  final translator = GoogleTranslator();
+  String _patientLanguage = 'en';
 
   final Map<String, List<Map<String, String>>> categoryMessages = {
     'Help': [
@@ -28,7 +40,7 @@ class MessagesPage extends StatelessWidget {
     'Feelings': [
       {'text': 'I am happy.', 'image': 'assets/images/happy.png'},
       {'text': 'I am sad.', 'image': 'assets/images/sad.png'},
-      {'text': 'I am angry.', 'image': 'assets/images/angry.png'}
+      {'text': 'I am annoyed.', 'image': 'assets/images/angry.png'}
     ],
     'General': [
       {'text': 'Hello.', 'image': 'assets/images/hello.png'},
@@ -37,17 +49,43 @@ class MessagesPage extends StatelessWidget {
     ]
   };
 
-  MessagesPage({super.key, required this.category});
+  @override
+  void initState() {
+    super.initState();
+    _loadPatientLanguage();
+  }
+
+  void _loadPatientLanguage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _patientLanguage = prefs.getString('patientLanguage') ?? 'en';
+    });
+    if (_patientLanguage == 'Hindi') {
+      _translateMessagesToHindi();
+    }
+  }
+
+  Future<void> _translateMessagesToHindi() async {
+    for (var category in categoryMessages.keys) {
+      for (var message in categoryMessages[category]!) {
+        var translation =
+            await translator.translate(message['text']!, to: 'hi');
+        setState(() {
+          message['text'] = translation.text;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final messages = categoryMessages[category] ?? [];
+    final messages = categoryMessages[widget.category] ?? [];
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
-          category,
+          widget.category,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -118,7 +156,8 @@ class MessagesPage extends StatelessWidget {
                                   const SizedBox(height: 10),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      speakMessage(message['text']!);
+                                      translateAndSpeakMessage(
+                                          context, message['text']!);
                                     },
                                     icon: const Icon(Icons.volume_up),
                                     label: const Text('Speak'),
@@ -135,7 +174,8 @@ class MessagesPage extends StatelessWidget {
                                   const SizedBox(height: 10),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      sendSMS(context, message['text']!);
+                                      translateAndSendSMS(
+                                          context, message['text']!);
                                     },
                                     icon: const Icon(Icons.send),
                                     label: const Text('Send'),
@@ -167,14 +207,33 @@ class MessagesPage extends StatelessWidget {
     );
   }
 
-  void speakMessage(String message) async {
-    await flutterTts.setLanguage("en-US");
+  void translateAndSpeakMessage(BuildContext context, String message) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? caretakerLanguage = prefs.getString('caretakerLanguage') ?? 'en';
+    if (caretakerLanguage == 'English') {
+      caretakerLanguage = 'en';
+    } else {
+      caretakerLanguage = 'hi';
+    }
+
+    var translation =
+        await translator.translate(message, to: caretakerLanguage);
+    await flutterTts.setLanguage(caretakerLanguage == 'hi' ? 'hi-IN' : 'en-US');
     await flutterTts.setPitch(1.0);
-    await flutterTts.speak(message);
+    await flutterTts.speak(translation.text);
   }
 
-  void sendSMS(BuildContext context, String message) async {
+  void translateAndSendSMS(BuildContext context, String message) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? caretakerLanguage = prefs.getString('caretakerLanguage') ?? 'en';
+    if (caretakerLanguage == 'English') {
+      caretakerLanguage = 'en';
+    } else {
+      caretakerLanguage = 'hi';
+    }
+
+    var translation =
+        await translator.translate(message, to: caretakerLanguage);
     String? phoneNumber = prefs.getString('phoneNumber');
 
     if (phoneNumber == null) {
@@ -189,7 +248,7 @@ class MessagesPage extends StatelessWidget {
               controller: phoneController,
               keyboardType: TextInputType.phone,
               decoration:
-                  const InputDecoration(hintText: 'Reciepient Phone Number'),
+                  const InputDecoration(hintText: 'Recipient Phone Number'),
             ),
             actions: [
               TextButton(
@@ -203,7 +262,7 @@ class MessagesPage extends StatelessWidget {
                   String inputNumber = phoneController.text;
                   if (inputNumber.isNotEmpty) {
                     await prefs.setString('phoneNumber', inputNumber);
-                    sendSMS(context, message);
+                    sendTranslatedSMS(context, translation.text, inputNumber);
                     Navigator.of(context).pop();
                   }
                 },
@@ -214,30 +273,34 @@ class MessagesPage extends StatelessWidget {
         },
       );
     } else {
-      // Request SMS permissions
-      if (await Permission.sms.request().isGranted) {
-        final SmsStatus result = await BackgroundSms.sendMessage(
-          phoneNumber: phoneNumber,
-          message: message,
-          simSlot: 2,
-        );
-        String feedbackMessage;
-        if (result == SmsStatus.sent) {
-          feedbackMessage = 'SMS sent successfully';
-        } else {
-          feedbackMessage = 'Failed to send SMS';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              feedbackMessage,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.black,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+      sendTranslatedSMS(context, translation.text, phoneNumber);
+    }
+  }
+
+  void sendTranslatedSMS(
+      BuildContext context, String message, String phoneNumber) async {
+    if (await Permission.sms.request().isGranted) {
+      final SmsStatus result = await BackgroundSms.sendMessage(
+        phoneNumber: phoneNumber,
+        message: message,
+        simSlot: 2,
+      );
+      String feedbackMessage;
+      if (result == SmsStatus.sent) {
+        feedbackMessage = 'SMS sent successfully';
+      } else {
+        feedbackMessage = 'Failed to send SMS';
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            feedbackMessage,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 }

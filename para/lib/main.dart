@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart'; // Ensure to have appropriate imports for each screen
+import 'package:para/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());

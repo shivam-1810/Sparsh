@@ -1,15 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:translator/translator.dart';
 import 'package:para/messages_page.dart';
 
-class HomeScreen extends StatelessWidget {
-  final List<Map<String, String>> categories = [
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<Map<String, String>> originalCategories = [
     {'name': 'Help', 'image': 'assets/images/help.png'},
     {'name': 'Needs', 'image': 'assets/images/needs.png'},
     {'name': 'Feelings', 'image': 'assets/images/feelings.png'},
     {'name': 'General', 'image': 'assets/images/general.png'},
   ];
 
-  HomeScreen({super.key});
+  List<Map<String, String>> translatedCategories = [];
+  final translator = GoogleTranslator();
+  String _patientLanguage = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPatientLanguage();
+  }
+
+  void _loadPatientLanguage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _patientLanguage = prefs.getString('patientLanguage') ?? 'en';
+    });
+    if (_patientLanguage == 'Hindi') {
+      _patientLanguage = 'hi';
+      _translateCategories();
+    } else {
+      translatedCategories = originalCategories;
+    }
+  }
+
+  Future<void> _translateCategories() async {
+    List<Map<String, String>> tempCategories = [];
+    for (var category in originalCategories) {
+      final translation =
+          await translator.translate(category['name']!, to: _patientLanguage);
+      tempCategories
+          .add({'name': translation.text, 'image': category['image']!});
+    }
+    setState(() {
+      translatedCategories = tempCategories;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +82,20 @@ class HomeScreen extends StatelessWidget {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
-            itemCount: categories.length,
+            itemCount: translatedCategories.isNotEmpty
+                ? translatedCategories.length
+                : originalCategories.length,
             itemBuilder: (context, index) {
+              var category = translatedCategories.isNotEmpty
+                  ? translatedCategories[index]
+                  : originalCategories[index];
               return GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) =>
-                          MessagesPage(category: categories[index]['name']!),
+                      builder: (context) => MessagesPage(
+                        category: originalCategories[index]['name']!,
+                      ),
                     ),
                   );
                 },
@@ -73,12 +123,12 @@ class HomeScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset(
-                        categories[index]['image']!,
+                        category['image']!,
                         height: 80,
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        categories[index]['name']!,
+                        category['name']!,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,

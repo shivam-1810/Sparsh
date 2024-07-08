@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:para/main_screen.dart';
+import 'package:para/user_details_page.dart';
 import 'dart:async';
-
-import 'package:para/home_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,6 +23,11 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+    _initialize();
+  }
+
+  void _initializeAnimations() {
     _controller = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
@@ -48,21 +55,41 @@ class _SplashScreenState extends State<SplashScreen>
     ));
 
     _controller.forward();
-    _controller.repeat(reverse: true);
+  }
 
-    Timer(const Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(),
-        ),
-      );
-    });
+  Future<void> _initialize() async {
+    await requestPermissions();
+    bool userDetailsFilled = await _userDetailsFilledCheck();
+    _navigateToNextScreen(userDetailsFilled);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> requestPermissions() async {
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      await Permission.camera.request();
+    }
+  }
+
+  Future<bool> _userDetailsFilledCheck() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('name') != null;
+  }
+
+  void _navigateToNextScreen(bool userDetailsFilled) {
+    Timer(const Duration(seconds: 3), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) =>
+              userDetailsFilled ? const MainScreen() : const UserDetailsPage(),
+        ),
+      );
+    });
   }
 
   @override

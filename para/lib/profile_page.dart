@@ -96,8 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         const Center(
                           child: CircleAvatar(
                             radius: 50,
-                            backgroundImage: AssetImage(
-                                'assets/images/dp.png'), // Add the path to the user's picture
+                            backgroundImage: AssetImage('assets/images/dp.png'),
                           ),
                         ),
                         const SizedBox(height: 25),
@@ -163,8 +162,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(title,
               style:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(
-              height: 10), // Added some spacing for better appearance
+          const SizedBox(height: 10),
           Center(
             child: DropdownButtonFormField<String>(
               value: selectedLanguage,
